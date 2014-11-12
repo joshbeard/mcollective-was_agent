@@ -146,8 +146,8 @@ module MCollective
             profile_threads = []
             profiles.each do |profile|
               profile_threads << Thread.new(profile) {
-              profile_status = `"#{dir}/#{profile}/bin/serverStop.sh"`
-              results << "#{profile}: #{profile_status}".chomp
+                profile_status = `"#{dir}/#{profile}/bin/serverStop.sh"`
+                results << "#{profile}: #{profile_status}".chomp
               }
             end
 
