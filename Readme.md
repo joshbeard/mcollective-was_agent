@@ -35,17 +35,17 @@ profile.  This can take quite a while.
 Manage the installation of the agent with default parameters:
 
 ```puppet
-include mco_agent_was
+include mco_was_agent
 
 ## or ##
 
-class { 'mco_agent_was': }
+class { 'mco_was_agent': }
 ```
 
 Ensure the agent is not present:
 
 ```puppet
-class { 'mco_agent_was':
+class { 'mco_was_agent':
   ensure => 'absent',
 }
 ```
@@ -54,7 +54,7 @@ Pass custom directories to locate WAS profiles.  This will apply to all nodes,
 so list any potential directories here.
 
 ```puppet
-class { 'mco_agent_was':
+class { 'mco_was_agent':
   profile_dirs = [
     '/opt/ibm/was/something/long/WebSphere85/profiles',
     '/opt/ibm/was/something/long/WebSphere7/profiles',

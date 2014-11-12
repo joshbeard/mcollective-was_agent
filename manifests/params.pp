@@ -1,6 +1,6 @@
-# == Class: mco_agent_was::params
+# == Class: mco_was_agent::params
 #
-# Private class that provides sane defaults for the mco_agent_was module.
+# Private class that provides sane defaults for the mco_was_agent module.
 #
 # === Parameters
 #
@@ -22,7 +22,7 @@
 #
 # Copyright 2014 Josh Beard, unless otherwise noted.
 #
-class mco_agent_was::params {
+class mco_was_agent::params {
 
   $ensure = 'present'
   $owner  = 'root'

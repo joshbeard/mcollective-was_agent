@@ -1,4 +1,4 @@
-# == Class: mco_was
+# == Class: mco_was_agent
 #
 # Installs the WAS Mcollective agent for interacting with IBM WebSphere
 # profiles.
@@ -40,7 +40,7 @@
 #
 # === Examples
 #
-#  class { 'mco_agent_was':
+#  class { 'mco_was_agent':
 #    ensure => 'present',
 #  }
 #
@@ -52,13 +52,13 @@
 #
 # Copyright 2014 Josh Beard, unless otherwise noted.
 #
-class mco_agent_was (
-  $ensure       = $mco_agent_was::params::ensure,
-  $mco_libdir   = $mco_agent_was::params::mco_libdir,
-  $profile_dirs = $mco_agent_was::params::profile_dirs,
-  $owner        = $mco_agent_was::params::owner,
-  $group        = $mco_agent_was::params::group,
-) inherits mco_agent_was::params {
+class mco_was_agent (
+  $ensure       = $mco_was_agent::params::ensure,
+  $mco_libdir   = $mco_was_agent::params::mco_libdir,
+  $profile_dirs = $mco_was_agent::params::profile_dirs,
+  $owner        = $mco_was_agent::params::owner,
+  $group        = $mco_was_agent::params::group,
+) inherits mco_was_agent::params {
 
   validate_re($ensure, '(present|installed|absent)')
   validate_absolute_path($mco_libdir)
@@ -81,19 +81,19 @@ class mco_agent_was (
     }
   }
 
-  file { 'mcoagent_was_agent':
+  file { 'mcowas_agent_agent':
     ensure  => $file_ensure,
     path    => "${mco_libdir}/agent/was.rb",
-    content => template('mco_agent_was/was.rb.erb'),
+    content => template('mco_was_agent/was.rb.erb'),
     owner   => $owner,
     group   => $group,
     notify  => Service['pe-mcollective'],
   }
 
-  file { 'mcoagent_was_ddl':
+  file { 'mcowas_agent_ddl':
     ensure => $file_ensure,
     path   => "${mco_libdir}/agent/was.ddl",
-    source => 'puppet:///modules/mco_agent_was/agent/was.ddl',
+    source => 'puppet:///modules/mco_was_agent/agent/was.ddl',
     owner  => $owner,
     group  => $group,
     notify => Service['pe-mcollective'],
