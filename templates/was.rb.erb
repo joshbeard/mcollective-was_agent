@@ -1,0 +1,167 @@
+##
+## Interact with IBM WebSphere profiles.
+## These are brutally slow.  They have shell scripts that fire up a JVM and can
+## take several minutes each.
+##
+module MCollective
+  module Agent
+    class Was<RPC::Agent
+
+      ## WebSphere85 WebSphere7
+      ## Profiles can be in either of these directories
+      profile_dir = <%= @profile_dirs %>
+
+      ##
+      ## Obtain a list of profiles by parsing directories.  Nothing beyond
+      ## that.
+      ##
+      action "profile_list" do
+        dirs = request[:profiledir] || profile_dir
+
+        results = Array.new
+        dirs.each do |dir|
+
+          return unless File.exists?(dir)
+
+          Dir["#{dir}/*/"].map { |a| File.basename(a) }.each do |profile|
+            results << profile
+          end
+
+          if results.empty?
+            results << "No profiles found in #{dir}"
+          end
+        end
+
+        reply[:was_profiles] = results
+      end
+
+      ##
+      ## Query the status of each profile on the system.  This can take a
+      ## while - a JVM is fired up for this.
+      ##
+      action "profile_status" do
+        dirs = profile_dir
+
+        results = Array.new
+        running_profiles = Array.new
+        stopped_profiles = Array.new
+
+        dir_threads = []
+
+        dirs.each do |dir|
+          dir_threads << Thread.new(dir) {
+
+            return unless File.exists?(dir)
+
+            if request[:wasprofile]
+              profiles = request[:wasprofile].split(',')
+            else
+              profiles = Dir["#{dir}/*/"].map { |a| File.basename(a) }
+            end
+
+            profile_threads = []
+            profiles.each do |profile|
+              profile_threads << Thread.new(profile) {
+                profile_status = `"#{dir}/#{profile}/bin/serverStatus.sh"`
+                if profile_status =~ /running/
+                  running_profiles << profile
+                else
+                  stopped_profiles << profile
+                end
+              }
+            end
+            profile_threads.each { |profile_thread| profile_thread.join }
+
+            if results.empty?
+              results = "No profiles found"
+            end
+
+          }
+          dir_threads.each { |dir_thread| dir_thread.join }
+        end
+
+        reply[:running] = running_profiles
+        reply[:stopped] = stopped_profiles.uniq
+      end
+
+      ##
+      ## Start a specified profile.
+      ##
+      action "profile_start" do
+        dirs = request[:profiledir] || profile_dir
+
+        results = Array.new
+
+        dir_threads = []
+
+        dirs.each do |dir|
+          dir_threads << Thread.new(dir) {
+            return unless File.exists?(dir)
+
+            if request[:wasprofile]
+              profiles = request[:wasprofile].split(',')
+            else
+              profiles = Dir["#{dir}/*/"].map { |a| File.basename(a) }
+            end
+
+            profile_threads = []
+            profiles.each do |profile|
+              profile_threads << Thread.new(profile) {
+                profile_status = `"#{dir}/#{profile}/bin/serverStart.sh"`
+                results << "#{profile}: #{profile_status}".chomp
+              }
+            end
+
+            profile_threads.each { |profile_thread| profile_thread.join }
+            if results.empty?
+              results = "No profiles found"
+            end
+          }
+          dir_threads.each { |dir_thread| dir_thread.join }
+        end
+
+        reply[:results] = results
+      end
+
+      ##
+      ## Stop a specified profile
+      ##
+      action "profile_stop" do
+        dirs = request[:profiledir] || profile_dir
+
+        results = Array.new
+
+        dir_threads = []
+
+        dirs.each do |dir|
+          dir_threads << Thread.new(dir) {
+            return unless File.exists?(dir)
+
+            if request[:wasprofile]
+              profiles = request[:wasprofile].split(',')
+            else
+              profiles = Dir["#{dir}/*/"].map { |a| File.basename(a) }
+            end
+
+            profile_threads = []
+            profiles.each do |profile|
+              profile_threads << Thread.new(profile) {
+              profile_status = `"#{dir}/#{profile}/bin/serverStop.sh"`
+              results << "#{profile}: #{profile_status}".chomp
+              }
+            end
+
+            profile_threads.each { |profile_thread| profile_thread.join }
+            if results.empty?
+              results = "No profiles found"
+            end
+          }
+          dir_threads.each { |dir_thread| dir_thread.join }
+        end
+
+        reply[:results] = results
+      end
+
+    end
+  end
+end
